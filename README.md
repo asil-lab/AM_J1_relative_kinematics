@@ -3,11 +3,16 @@
 Thus is a Python library for reproducing the work published in [Estimation of Relative Kinematic Parameters in Anchorless Environments](https://link-url-here.org).
 
 ## Description
+There are 4 main fiolders:
+* **./main:** contains the code for the simulations in the paper.
+* **./output:** contains simulation output files used to generate the plots as shown in the paper. Format is **.npz**.
+* **./plot:** contains the code for exactly recreating the plots in the paper.
+* **./util:** contains additional code for simu8lations. Includes code for Procrustes error and other miscellaneous functions.
 
-* **./main:** contains the code for 
-* **./output:** contains the code for 
-* **./plot:** contains the code for 
-* **./util:** contains the code for 
+Key points to consider:
+* The paths specified in the code are specified relative to the location of the code. Consider changing the path appropriately.
+* The codes in /main folder can be run again with different kinematic parameters. Be sure to change the save folder path if necessary.
+
 
 ## Support and questions to the community
 
@@ -24,7 +29,7 @@ Python 3.5 and higher
 
 ## Citation
 
-    @Misc{gpy2014,
+    @Misc{Mishra2023,
       author =   {{A. Mishra and R. T. Rajan}},
       title =    {{Estimation of Relative Kinematic Parameters of an
 Anchorless Network}},

@@ -9,11 +9,8 @@ mpl.use('Qt5Agg')
 # mpl.rc('font', **font)
 plt.ion()
 
-# crlb = np.load('./crlb_vel.npz')
-# crlb = np.load('./crlb_vel_STD0p1.npz')
-crlb = np.load('./crlb_vel_cond.npz')
-# mc_runs = np.load('./comp_vel.npz')
-mc_runs = np.load('./comp_vel_STD0p1.npz')
+crlb = np.load('./../output/crlb_vel.npz')
+mc_runs = np.load('./../output/comp_vel.npz')
 
 Y0 = np.array([[-244.0, -588.0], [385.0, -456.0], [81.0, -992.0], [-19.0, -730.0], [-792.0, 879.0], [-554.0, 970.0],
                    [-965.0, 155.0], [-985.0, 318.0], [-49.0, -858.0], [-503.0, 419.0]]).transpose()
@@ -121,8 +118,6 @@ plt.setp(axs[1], yticks=[2e-1, 1e-1, 8e-2, 6e-2, 4e-2, 2e-2, 1e-2])
 axs[1].set_xlabel('Number of timestamps, $K$ [-]')
 # axs[1].legend()
 axs[1].grid()
-plt.show()
-
 
 fig4, axs4 = plt.subplots(1, 1)
 axs4.set_yscale('log')
@@ -143,48 +138,6 @@ axs4.set_title('Relative trajectory error', fontsize=12)
 # axs4[0].xaxis.set_ticklabels([])
 axs4.legend()
 axs4.grid()
-
-plt.show()
-
-fig2, axs2 = plt.subplots(3, 1)
-axs2[0].set_yscale('log')
-axs2[1].set_yscale('log')
-axs2[2].set_yscale('log')
-
-axs2[0].plot(rmse_K, rmse_main_b0, 'bo-')
-axs2[0].plot(crlb_K, rmse_gtwr_b0, 'r--')
-# axs2[0].plot(crlb_K, crlb_main_b0, 'k--')
-axs2[0].grid()
-
-axs2[1].plot(rmse_K, rmse_main_b1, 'bo-')
-axs2[1].plot(crlb_K, rmse_gtwr_b1, 'r--')
-# axs2[1].plot(crlb_K, crlb_main_b1, 'k--')
-axs2[1].grid()
-
-axs2[2].plot(rmse_K, rmse_main_b2, 'bo-')
-axs2[2].plot(crlb_K, rmse_gtwr_b2, 'r--')
-# axs2[2].plot(crlb_K, crlb_main_b2, 'k--')
-axs2[2].grid()
-
-plt.show()
-
-# errors
-fig3, axs3 = plt.subplots(2, 2)
-# axs2[0].set_yscale('log')
-# axs2[1].set_yscale('log')
-# axs2[2].set_yscale('log')
-
-axs3[0, 0].hist(err_main_y0[0, :, -1], bins=50)
-axs3[0, 0].grid()
-
-axs3[0, 1].hist(err_gtwr_y0[0, :, -1], bins=50)
-axs3[0, 1].grid()
-
-axs3[1, 0].hist(err_main_y1[0, :, -1], bins=50)
-axs3[1, 0].grid()
-
-axs3[1, 1].hist(err_gtwr_y1[0, :, -1], bins=50)
-axs3[1, 1].grid()
 
 plt.show()
 

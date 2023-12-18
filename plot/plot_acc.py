@@ -9,8 +9,7 @@ font = {'size': 12}
 mpl.rc('font', **font)
 plt.ion()
 
-crlb = np.load('./crlb_acc3.npz')
-# crlb = np.load('./crlb_acc_STD0p1.npz')
+crlb = np.load('./../output/crlb_acc3.npz')
 crlb_K = crlb['K']
 crlb_main_y0 = crlb['rmse_main_y0']
 crlb_main_y1 = crlb['rmse_main_y1']
@@ -22,8 +21,7 @@ crlb_main_b2 = crlb['rmse_main_b2']
 crlb_main_b3 = crlb['rmse_main_b3']
 crlb_main_b4 = crlb['rmse_main_b4']
 
-mc_runs = np.load('./mc_2step_acc.npz')
-# mc_runs = np.load('./mc_2step_acc_STD0p1.npz')
+mc_runs = np.load('./../output/mc_2step_acc.npz')
 rmse_K = mc_runs['K']
 rmse_y0_hat = mc_runs['rmse_y0_hat']
 rmse_y1_hat = mc_runs['rmse_y1_hat']
@@ -67,11 +65,6 @@ Y1_bar = Y1 @ C
 def procrustes_error(Z, Z_bar):
     H, scale = orthogonal_procrustes(Z.T, Z_bar.T)
     Z_proc = Z.T @ H
-    # plt.figure()
-    # plt.plot(Z_bar[0, :], Z_bar[1, :], 'bo')
-    # plt.plot(Z_proc[:, 0], Z_proc[:, 1], 'ro')
-    # plt.grid()
-    # plt.show()
     err_z = utils.vectorize(Z_bar - Z_proc.T)
 
     return np.squeeze(err_z), H
@@ -85,7 +78,6 @@ for kk in range(K):
 
 lw = 3.0
 fig, axs = plt.subplots(3, 1, gridspec_kw={'hspace': 0.3})
-# fig, axs = plt.subplots(3, 1, figsize=(6.4, 4.8), gridspec_kw={'height_ratios': [1, 0.8, 1]})
 axs[0].set_yscale('log')
 axs[1].set_yscale('log')
 axs[2].set_yscale('log')
@@ -155,32 +147,6 @@ axs3[2].set_xlabel('No. of timestamps [K]')
 plt.setp(axs3[2], xticks=[10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
 axs3[2].legend()
 axs3[2].grid()
-
-fig2, axs2 = plt.subplots(5, 1)
-axs2[0].set_yscale('log')
-axs2[1].set_yscale('log')
-axs2[2].set_yscale('log')
-axs2[3].set_yscale('log')
-axs2[4].set_yscale('log')
-
-axs2[0].plot(rmse_K, rmse_b0_hat, 'bo-')
-axs2[0].plot(rmse_K, rmse_b0_acc, 'rs-')
-axs2[0].grid()
-
-axs2[1].plot(rmse_K, rmse_b1_hat, 'bo-')
-axs2[1].plot(rmse_K, rmse_b1_acc, 'rs-')
-axs2[1].grid()
-
-axs2[2].plot(rmse_K, rmse_b2_hat, 'bo-')
-axs2[2].plot(rmse_K, rmse_b2_acc, 'rs-')
-axs2[2].grid()
-
-axs2[3].plot(rmse_K, rmse_b3_hat, 'bo-')
-axs2[3].plot(rmse_K, rmse_b3_acc, 'rs-')
-axs2[3].grid()
-
-axs2[4].plot(rmse_K, rmse_b4_hat, 'bo-')
-axs2[4].grid()
 
 plt.show()
 
