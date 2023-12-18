@@ -3,7 +3,7 @@ from scipy.linalg import null_space
 from numpy.linalg import pinv
 import matplotlib.pyplot as plt
 from scipy.linalg import block_diag
-import utils_rl as utils
+import utils
 import math
 import matplotlib as mpl
 mpl.use('Qt5Agg')

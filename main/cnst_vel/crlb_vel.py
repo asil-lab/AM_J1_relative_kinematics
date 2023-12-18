@@ -3,7 +3,7 @@ from numpy.linalg import pinv
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 import pickle
-import utils_rl as utils
+import utils
 import math
 import matplotlib as mpl
 mpl.use('Qt5Agg')

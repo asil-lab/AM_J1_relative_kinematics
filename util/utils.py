@@ -44,49 +44,6 @@ def double_center(D, opt=True):
 
     return -0.5 * J.transpose().dot(D).dot(J)
 
-def align(Xt):
-    Xa = Xt - Xt[:, 0].reshape((2, 1))
-    theta = np.arctan2(Xa[1, 1], Xa[0, 1])
-    rotmat = np.array([[np.cos(theta), np.sin(theta)], [-np.sin(theta), np.cos(theta)]])
-
-    Xa = rotmat.dot(Xa)
-
-    return Xa
-
-def align3D(Xt, d, n):
-    Xa = Xt - Xt[:, 0].reshape((d, 1)).dot(np.ones((1, n)))
-
-    # plane through nodes 0, 1 and 2 (a*x + b*y + c*z + d = 0 with z = 0 as it passes through origin)
-    theta = np.arccos(np.dot(Xa[:, 1], Xa[:, 2]) / np.linalg.norm(Xa[:, 1]) / np.linalg.norm(Xa[:, 2]))
-    axis = np.cross(Xa[:, 1], Xa[:, 2])
-    axis = axis / np.linalg.norm(axis)
-
-    # angle and axis made by the plane above with the X-Y plane
-    axis_xyplane = np.array([0., 0., 1.])
-    phi = np.arccos(np.dot(axis, axis_xyplane) / np.linalg.norm(axis))
-    axis_rot = np.cross(axis, axis_xyplane)
-    axis_rot = axis_rot / np.linalg.norm(axis_rot)
-
-    # source https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
-    r11 = np.cos(phi) + axis_rot[0] ** 2 * (1. - np.cos(phi))
-    r12 = axis_rot[0] * axis_rot[1] * (1. - np.cos(phi))
-    r13 = axis_rot[1] * np.sin(phi)
-    r22 = np.cos(phi) + axis_rot[1] ** 2 * (1. - np.cos(phi))
-    r23 = - axis_rot[0] * np.sin(phi)
-    r33 = np.cos(phi)
-
-    # rotmat = np.identity(3) - np.sin(theta) * skew_form(axis) + (1 - np.cos(theta)) * skew_form(axis).dot(skew_form(axis))
-    rotmat = np.array([[r11, r12, r13], [r12, r22, r23], [-r13, -r23, r33]])
-    Xa = rotmat.dot(Xa)
-
-    # aligning the positive x-axis
-    beta = np.arctan2(Xa[1, 1], Xa[0, 1])
-    rotmat2D = np.array([[np.cos(beta), np.sin(beta), 0.], [-np.sin(beta), np.cos(beta), 0.], [0., 0., 1.]])
-
-    Xa = rotmat2D.dot(Xa)
-
-    return Xa
-
 def cMDS(D, center=True):
     if center:
         G = double_center(D)
@@ -104,43 +61,6 @@ def cMDS(D, center=True):
     sorted_eig_vec = eig_vec[:, idx]
 
     return np.diag(np.sqrt(sorted_eig_val)).dot(sorted_eig_vec.transpose())
-
-def rotate_and_check(X):
-    Xrel = X - X[:, 0].reshape((2, 1))
-    rot = np.arctan2(Xrel[1, 1], Xrel[0, 1])
-
-    return np.array([[np.cos(rot), np.sin(rot)], [-np.sin(rot), np.cos(rot)]]).dot(Xrel), rot
-
-def get_incremental_rot(t, sqrd_d, model):
-    n = len(sqrd_d)
-    inc_angle = np.zeros(n)
-    s = np.zeros(n - 1)
-    d = np.sqrt(sqrd_d)
-    l = 1.0
-
-    for ii in range(n - 2):
-        if model == "CST_VEL":
-            l = (t[ii + 2] - t[ii + 1]) / (t[ii + 1] - t[ii])
-            s[ii] = np.sqrt((l * d[ii] ** 2 + d[ii + 2] ** 2 - (1 + l) * d[ii + 1] ** 2) / (l * (1.0 + l)))
-
-        # inc_angle[ii + 1] = s / d[ii]
-        inc_angle[ii + 1] = np.arccos((d[ii] ** 2 + d[ii + 1] ** 2 - s[ii] ** 2) / (2.0 * d[ii] * d[ii + 1]))
-
-    s[-1] = l * s[-2]
-    inc_angle[-1] = np.arccos((d[-1] ** 2 + d[-2] ** 2 - (l * s[-1]) ** 2) / (2.0 * d[-1] * d[-2]))
-    # inc_angle[-1] = s / d[-1]
-
-    return s, inc_angle
-
-def skew_form(v):
-    '''
-    skew-symmetric form of a vector used in cross product
-    :param v: vector in 3D
-    :return: 3X3 skew symmetric vector
-    '''
-
-    return np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
-
 
 def gt(X_list, n):
     x = np.zeros((len(X_list), n))
@@ -176,43 +96,6 @@ def gt(X_list, n):
     return x, y, xrel, yrel, delta_s, inc_rots
 
 
-def gt3D(X_list, n):
-    x = np.zeros((len(X_list), n))
-    y = np.zeros((len(X_list), n))
-    z = np.zeros((len(X_list), n))
-    xrel = np.zeros((len(X_list), n))
-    yrel = np.zeros((len(X_list), n))
-    zrel = np.zeros((len(X_list), n))
-
-    delta_s = np.zeros((len(X_list), n))
-    rots = np.zeros((len(X_list)))
-    # x_delta_s = np.zeros((len(X_list), n))
-    inc_rots = np.zeros((len(X_list)))
-
-    for ii in range(len(X_list)):
-        # absolute coordinates
-        x[ii, :] = X_list[ii][0, :]
-        y[ii, :] = X_list[ii][1, :]
-        z[ii, :] = X_list[ii][2, :]
-
-        # relative coordinates
-        xrel[ii, :] = x[ii, :] - x[ii, 0]
-        yrel[ii, :] = y[ii, :] - y[ii, 0]
-        zrel[ii, :] = z[ii, :] - z[ii, 0]
-
-        # orientation of line joining node k and k'
-        # rots[ii] = np.arctan2(yrel[ii, 1], xrel[ii, 1])
-
-        if ii:
-            # NOTE: np.sqrt and np.square give element-wise operations
-            # relative distance travelled
-            # x_delta_s[ii, :] = np.sqrt(np.square(x[ii, :] - x[ii - 1, :]) + np.square(y[ii, :] - y[ii - 1, :]))
-            delta_s[ii, :] = np.sqrt(np.square(xrel[ii, :] - xrel[ii - 1, :]) + np.square(yrel[ii, :] - yrel[ii - 1, :]) + np.square(zrel[ii, :] - zrel[ii - 1, :]))
-    # incremental angle between different time frames for nodes k and k'
-    # inc_rots[1:] = np.diff(rots)
-
-    return x, y, z, xrel, yrel, zrel, delta_s, inc_rots
-
 def mds_consistency_check(X, Xprev, plot_flag):
     '''
     :param X: current solution provided by MDS
@@ -233,181 +116,6 @@ def mds_consistency_check(X, Xprev, plot_flag):
         plt.show()
 
     return Xcons
-
-'''
-    Plotting functions
-'''
-def plot3D(coeff_plane, point_sets):
-
-    nSets = len(point_sets)
-
-    tmp = np.hstack((point_sets[0], point_sets[1]))
-    maxx = int(max(abs(tmp[0, :])))
-    maxy = int(max(abs(tmp[1, :])))
-
-    xmesh = np.linspace(-maxx, maxx, 2 * maxx)
-    ymesh = np.linspace(-maxy, maxy, 2 * maxy)
-
-    # creating x,y for the plane
-    xx, yy = np.meshgrid(xmesh, ymesh)
-
-    # calculating corresponding z
-    z = (-coeff_plane[0] * xx - coeff_plane[1] * yy - coeff_plane[3]) * 1. / coeff_plane[2]
-
-    # plotting the plane
-    plt3d = plt.figure().gca(projection='3d')
-    plt3d.plot_surface(xx, yy, z, alpha=0.2)
-
-    # plotting points
-    ax = plt.gca()
-    node_col = ['b', 'r', 'g', 'm']
-    markers = [8, 16, 20, 20]
-    for ii in range(nSets):
-        ax.scatter(point_sets[ii][0, :], point_sets[ii][1, :], point_sets[ii][2, :], node_col[ii], s=markers[ii])
-
-    plt.xlabel("x-axis")
-    plt.ylabel("y-axis")
-    # plt.zlabel("z-axis")
-    plt.show()
-
-def draw_planes3D(point_sets):
-    # Works only for 3D Euclidean Space
-    # number of planes to be plotted
-    nSets = len(point_sets)
-    normal_vecs = np.zeros((4, nSets))
-    xmesh = np.linspace(-20., 20., 2 * 20)
-    ymesh = np.linspace(-20., 20., 2 * 20)
-
-    # creating x,y for the plane
-    xx, yy = np.meshgrid(xmesh, ymesh)
-    z = [None] * nSets
-
-    # plotting the planes and associated points
-    plt3d = plt.figure().gca(projection='3d')
-    ax = plt.gca()
-    # ax.hold(True)
-    node_col = ['b', 'r', 'g', 'm', 'c']
-    markers = [8, 16, 16, 16, 16]
-
-    # source: https://stackoverflow.com/questions/12236566/setting-different-color-for-each-series-in-scatter-plot-on-matplotlib
-    colors = itertools.cycle(["b", "r", "g", "m", "c"])
-
-    # calculating the normal vectors
-    for ii in range(nSets):
-        # subtraction is not needed since first point is always origin but done here for sake of completion
-        vec1 = point_sets[ii][:, 1] - point_sets[ii][:, 0]
-        vec2 = point_sets[ii][:, 2] - point_sets[ii][:, 0]
-        normal_vecs[0:3, ii] = np.cross(vec1, vec2)
-        normal_vecs[0:3, ii] = normal_vecs[0:3, ii] / np.linalg.norm(normal_vecs[0:3, ii])
-
-        # calculating corresponding z
-        z[ii] = (-normal_vecs[0, ii] * xx - normal_vecs[1, ii] * yy - normal_vecs[3, ii]) * 1. / normal_vecs[2, ii]
-
-        # planes
-        plt3d.plot_surface(xx, yy, z[ii], alpha=0.2, color=node_col[ii])
-        # points
-        # ax.scatter(point_sets[ii][0, :], point_sets[ii][1, :], point_sets[ii][2, :], node_col[ii], s=markers[ii])
-        ax.scatter(point_sets[ii][0, :], point_sets[ii][1, :], point_sets[ii][2, :], color=next(colors), s=markers[ii])
-
-    # r = ro + tv (eqn of a line). Since all the lines pass through origin, ro = 0 and only t is sufficient once v is known
-    t = np.linspace(-40., 40., 2 * 40)
-    # intersection of subsequent planes --> line (if n planes then n-1 intersections)
-    line_vecs = np.zeros((3, nSets - 1))
-    for jj in range(nSets - 1):
-        line_vecs[:, jj] = np.cross(normal_vecs[0:3, jj], normal_vecs[0:3, jj + 1])
-        ax.plot(t * line_vecs[0, jj], t * line_vecs[1, jj], t * line_vecs[2, jj], 'k')
-
-    # # angle made by planes w.r.t. each other at different time instances
-    # plane_angles = np.zeros((nSets, nSets))
-    # for ii in range(nSets):
-    #     for jj in range(nSets):
-    #         plane_angles[ii, jj] = np.arccos(np.dot(normal_vecs[:3, ii], normal_vecs[:3, jj]) / np.linalg.norm(normal_vecs[:3, ii]) / np.linalg.norm(normal_vecs[:3, jj]))
-
-    # # angle between the normals to intersecting lines between planes (to see if they fall in the same plane)
-    # # n planes, n-1 intersections, n - 2 angles between them (taken sequentially)
-    # line_norm_vecs = np.zeros((3, nSets - 2))
-    # for ii in range(nSets - 2):
-    #     line_norm_vecs[:, ii] = np.cross(line_vecs[:, ii], line_vecs[:, ii + 1])
-
-    # condition for coplanar vectors
-    # Q. Are the normals to the planes at different timestamps coplanar?
-    triple_prod_planes = []
-    angle_triple_prod_planes = []
-    for comb in itertools.combinations(np.arange(nSets), 3):
-        # a . (b X c)
-        triple_prod_planes.append(np.dot(normal_vecs[:3, comb[0]], np.cross(normal_vecs[:3, comb[1]], normal_vecs[:3, comb[2]])))
-
-        # angle between the plane and the normal
-        # b X c
-        tmp_norm = np.cross(normal_vecs[:3, comb[1]], normal_vecs[:3, comb[2]])
-        # cos-1(a . (b X c) / ||a|| ||b X c||)
-        angle_triple_prod_planes.append(np.arccos(np.dot(normal_vecs[:3, comb[0]], tmp_norm) / np.linalg.norm(normal_vecs[:, comb[0]]) / np.linalg.norm(tmp_norm)))
-
-    # Q. Are the intersecting lines coplanar?
-    # source: https://stackoverflow.com/questions/27974126/how-to-get-all-combinations-of-length-n-in-python
-    triple_prod_vals = []
-    angle_triple_prod_vals = []
-    for comb in itertools.combinations(np.arange(nSets - 1), 3):
-        triple_prod_vals.append(np.dot(line_vecs[:, comb[0]], np.cross(line_vecs[:, comb[1]], line_vecs[:, comb[2]])))
-
-        # angle between the plane and the normal
-        tmp_norm = np.cross(line_vecs[:, comb[1]], line_vecs[:, comb[2]])
-        angle_triple_prod_vals.append(np.arccos(np.dot(line_vecs[:, comb[0]], tmp_norm) / np.linalg.norm(line_vecs[:, comb[0]]) / np.linalg.norm(tmp_norm)))
-
-    plt.xlabel("x-axis")
-    plt.ylabel("y-axis")
-    # plt.zlabel("z-axis")
-    plt.show()
-
-def nls_init_2D(t, d, init_slope):
-    assert len(d) == 3 and len(t) == 3, "Distance or time vector length is not 3!"
-    l = (t[2] - t[1]) / (t[1] - t[0])
-    s = np.sqrt((l * d[0] ** 2 + d[2] ** 2 - (1 + l) * d[1] ** 2) / (l * (1.0 + l)))
-
-    rel_slope = np.pi - np.arccos((d[0] ** 2 + s ** 2 - d[1] ** 2) / (2.0 * d[0] * s))
-    slope = init_slope + rel_slope
-
-    # for unit time
-    s = s / (t[2] - t[1])
-    init = np.array([s * np.cos(slope), s * np.sin(slope)]).reshape((2, 1))
-
-    if np.isnan(np.sum(init)):
-        # print(s)
-        init = np.array([0., 0.]).reshape((2, 1))
-
-    return init
-
-def nls_init_2D_new(T, D, init_slope):
-    assert len(D) >= 3 and len(T) >= 3, "Distance or time vector length is less than 3!"
-
-    iterable = np.arange(0, len(T), 1)
-    comb = list(itertools.combinations(iterable, 3))
-
-    s = np.zeros(len(comb))
-    rel_slope = np.zeros(len(comb))
-    for ii in range(len(comb)):
-        l = (T[comb[ii][2]] - T[comb[ii][1]]) / (T[comb[ii][1]] - T[comb[ii][0]])
-        d = np.array([D[comb[ii][0]], D[comb[ii][1]], D[comb[ii][2]]])
-        s[ii] = np.sqrt((l * d[0] ** 2 + d[2] ** 2 - (1 + l) * d[1] ** 2) / (l * (1.0 + l)))
-        if s[ii] <= 0.:
-            s[ii] = np.nan
-
-        rel_slope[ii] = np.pi - np.arccos((d[0] ** 2 + s[ii] ** 2 - d[1] ** 2) / (2.0 * d[0] * s[ii]))
-        s[ii] = s[ii] / (T[comb[ii][1]] - T[comb[ii][0]])
-
-    # compared to np.mean(), np.nanmean() ignores nan
-    s_avg = np.nanmean(s)
-    rel_slope_avg = np.nanmean(rel_slope)
-    slope = init_slope + rel_slope_avg
-
-    # for unit time
-    init = np.array([s_avg * np.cos(slope), s_avg * np.sin(slope)]).reshape((2, 1))
-
-    if np.isnan(np.sum(init)):
-        # print(s)
-        init = np.array([0., 0.]).reshape((2, 1))
-
-    return init
 
 def half_vectorize(X, skew=False, ch=False):
     n1, n2 = X.shape
@@ -908,34 +616,11 @@ def solve_lyapunov_like_eqns_sym(A, B, C, D, M=2, N=4):
     '''
         QCQP formulation
     '''
-    # P1 = np.zeros((len(unknowns), len(unknowns)))
+    #TODO
 
     '''
         scipy.optimize.minimize
     '''
-    # cons = ({'type': 'ineq', 'fun': lambda x: x[1] * x[2] - x[0] * x[4]},
-    #         {'type': 'ineq', 'fun': lambda x: x[1] * x[3] - x[0] * x[5]})
-
-    # tol1 = 1e-3
-    # tol2 = 1e-3
-    # con1 = lambda x: x[1] * x[2] - x[0] * x[4]
-    # con2 = lambda x: x[1] * x[3] - x[0] * x[5]
-    # con3 = lambda x: x[0] ** 2 - x[1] ** 2 - 1
-    # nlc1 = NonlinearConstraint(con1, -tol1, tol1)
-    # nlc2 = NonlinearConstraint(con2, -tol1, tol1)
-    # nlc3 = NonlinearConstraint(con3, -tol2, tol2)
-    # cons = (nlc1, nlc2)
-    # sol = minimize(func, np.zeros(6), args=(Mat, r), constraints=cons)
-    # h1_val_min = sol.x[0]
-    # h2_val_min = sol.x[1]
-    # u_1_min = sol.x[2] / h1_val_min
-    # v_1_min = sol.x[3] / h1_val_min
-    # u_2_min = sol.x[4] / h2_val_min
-    # v_2_min = sol.x[5] / h2_val_min
-
-    # print("\n Lyap-like least square errors from scipy minimize")
-    # print(np.array([[h1_val_min, h2_val_min], [u_1_min, u_2_min], [v_1_min, v_2_min]]))
-
     Y_est = np.hstack((np.array([[y11_est, v_1], [u_1, y22_est]]), Y2_est))
     Y_est2 = np.hstack((np.array([[y11_est, v_2], [u_2, y22_est]]), Y2_est))
     X_est = np.linalg.pinv(UA).dot(Y_est).dot(np.linalg.pinv(VA))
@@ -959,11 +644,6 @@ def solve_lyapunov_like_eqns(A, B, C, D, M=2, N=4, method='least_squares'):
     VA = VTA.transpose()
     UC, lmdC, VTC = np.linalg.svd(C, full_matrices=True)
     VC = VTC.transpose()
-
-    # # check to see what changes if we reflect C
-    # Cr = np.array([[1, 0], [0, -1]]).dot(C)
-    # UCr, lmdCr, VTCr = np.linalg.svd(Cr, full_matrices=True)
-    # VCr = VTCr.transpose()
 
     B_tilde = VTA.dot(B).dot(VA)
     D_tilde = VTC.dot(D).dot(VC)
@@ -1039,34 +719,12 @@ def solve_lyapunov_like_eqns(A, B, C, D, M=2, N=4, method='least_squares'):
     r = np.vstack((np.array([[y11_bar_est], [y22_bar_est]]), vectorize(Y2_bar_est)))
 
     if method == 'least_squares':
-        # unknowns = np.linalg.pinv(Mat.transpose().dot(Mat)).dot(Mat.transpose()).dot(r)
-        # h1_val = unknowns[0][0]
-        # h2_val = unknowns[1][0]
-        # u_1 = unknowns[2][0] / h1_val
-        # v_1 = unknowns[3][0] / h1_val
-        # u_2 = unknowns[4][0] / h2_val
-        # v_2 = unknowns[5][0] / h2_val
-
-        # res = lstsq(Mat, r)
-        # res_ls = pinv(Mat.T @ Mat) @ Mat.T @ r
-
-        # cvxpy
         x = cp.Variable((Mat.shape[1], 1))
         objective = cp.Minimize(cp.sum_squares(Mat @ x - r))
         constraints = [cp.norm(x) <= 10]
         prob = cp.Problem(objective, constraints)
 
-        # The optimal objective value is returned by `prob.solve()`.
         res_cp = prob.solve()
-        # The optimal value for x is stored in `x.value`.
-        # print(x.value)
-
-        # resr = lstsq(Matr, r)
-        # if res[1] < resr[1]:
-        #     sol = np.copy(res)
-        # else:
-        #     sol = np.copy(resr)
-        # sol = np.copy(res[0])
         sol = np.copy(x.value)
         h1_val = sol[0, 0]
         h2_val = sol[1, 0]
@@ -1222,11 +880,6 @@ def tls(X, y):
 def procrustes_error(Z, Z_bar):
     H, scale = orthogonal_procrustes(Z.T, Z_bar.T)
     Z_proc = Z.T @ H
-    # plt.figure()
-    # plt.plot(Z_bar[0, :], Z_bar[1, :], 'bo')
-    # plt.plot(Z_proc[:, 0], Z_proc[:, 1], 'ro')
-    # plt.grid()
-    # plt.show()
     err_z = vectorize(Z_bar - Z_proc.T)
 
     return np.squeeze(err_z), H

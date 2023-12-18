@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import math
-import utils_rl as utils
+import utils
 from matplotlib.gridspec import GridSpec
 from numpy.linalg import pinv, norm
 from scipy.linalg import orthogonal_procrustes

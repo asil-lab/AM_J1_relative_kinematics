@@ -31,8 +31,7 @@ Python 3.5 and higher
 
     @Misc{Mishra2023,
       author =   {{A. Mishra and R. T. Rajan}},
-      title =    {{Estimation of Relative Kinematic Parameters of an
-Anchorless Network}},
+      title =    {{Estimation of Relative Kinematic Parameters of an Anchorless Network}},
       howpublished = {\url{http://github.com/SheffieldML/GPy}},
       year = {2023}
     }
@@ -45,11 +44,11 @@ The code is written in Python.
 
 Packages to be installed:
 
-    conda update scipy
-    sudo apt-get update
-    sudo apt-get install python3-dev
-    sudo apt-get install build-essential   
-    conda update anaconda
+    python3-dev
+    build-essential   
+    scipy
+    numpy
+    cvxpy
 
 ### Running simulations:
 
@@ -67,8 +66,8 @@ Constant acceleration case and effect of Signal-to-Noise (SNR) ratio:
 
 Appendix plots:
 
-    python3 $DIR$/plots/travis_tests.py
-    python3 $DIR$/plots/travis_tests.py
+    python3 $DIR$/plots/distance_noise.py
+    python3 $DIR$/plots/lle_solvability.py
 
 ## Funding Acknowledgements
 

@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-import utils_rl as utils
+import utils
 from scipy.linalg import orthogonal_procrustes
 from numpy.linalg import norm
 mpl.use('Qt5Agg')
