@@ -32,7 +32,7 @@ Python 3.5 and higher
     @Misc{Mishra2023,
       author =   {{A. Mishra and R. T. Rajan}},
       title =    {{Estimation of Relative Kinematic Parameters of an Anchorless Network}},
-      howpublished = {\url[Github]{https://github.com/asil-lab/AM_J1_relative_kinematics}},
+      howpublished = {[Github](https://github.com/asil-lab/AM_J1_relative_kinematics)},
       year = {2023}
     }
 
