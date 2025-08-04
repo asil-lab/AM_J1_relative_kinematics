@@ -1,6 +1,6 @@
 # Relative Kinematics in Anchorless Environment
 
-Thus is a Python library for reproducing the work published in [Estimation of Relative Kinematic Parameters in Anchorless Environments](\url(https://ieeexplore.ieee.org/abstract/document/10956134)).
+Thus is a Python library for reproducing the work published in [Estimation of Relative Kinematic Parameters in Anchorless Environments](https://ieeexplore.ieee.org/abstract/document/10956134).
 
 ## Description
 There are 4 main fiolders:
