@@ -1,4 +1,4 @@
-# Relative Kinematics in Anchorless Environment
+# Relative Kinematics +IMU in an Anchorless Environment
 
 Thus is a Python library for reproducing the work published in [Estimation of Relative Kinematic Parameters in Anchorless Environments](https://ieeexplore.ieee.org/abstract/document/10956134).
 
